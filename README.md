@@ -12,7 +12,7 @@ Tech stack:
 - pytest
 - Docker & docker-compose
 - PostgreSQL
-- ClickHouse
+
 
 ## Installation
 
