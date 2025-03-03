@@ -1,0 +1,23 @@
+version: "3"
+services:
+  db:
+    tty: true
+    image: postgres:16-alpine
+    volumes:
+      - dev-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: test_database
+    ports:
+      - 5432:5432
+
+  redis:
+    image: redis:6-alpine
+    networks:
+      - default
+    ports:
+      - 6379:6379
+
+volumes:
+  dev-db-data: {}
