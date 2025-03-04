@@ -29,19 +29,29 @@ class BinanceClient:
         logger.info(f"Initialized {len(self.pairs)} cryptocurrency pairs")
 
     async def save_price_to_cache(self, symbol, price):
-        """Сохраняем цену во временный кеш (Redis)"""
+        """Сохраняем цену в Redis + отправляем WebSocket-сообщение"""
         cache_key = f'crypto_price_{symbol}'
         cached_data = cache.get(cache_key, [])
-        # Сохраняем в виде списка
         cached_data.append({'symbol': symbol, 'price': str(price)})
-        cache.set(cache_key, cached_data, timeout=60)  # Храним данные 1 минуту
+        cache.set(cache_key, cached_data, timeout=60)
+
+        # Отправляем данные в WebSocket
+        await channel_layer.group_send(
+            f'ticker_{symbol}',
+            {
+                'type': 'ticker_update',
+                'pair': symbol,
+                'price': str(price),
+            }
+        )
+
+        logger.debug(f"Saved price update in cache for {symbol}: {price}")
 
     async def connect(self):
         """Подключение к WebSocket Binance"""
         streams = "/".join([f"{pair}@trade" for pair in self.pairs])
         socket_url = f"{self.ws_url}/stream?streams={streams}&timeUnit=MICROSECOND"
-
-        print(socket_url)
+        
         try:
             self.connection = await websockets.connect(socket_url)
             logger.info(f"Connected to Binance WebSocket: {socket_url}")
